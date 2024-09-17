@@ -22,4 +22,6 @@ func InitDB() {
 	//migrate schema
 	database.AutoMigrate(&models.Article{})
 
+	database.AutoMigrate(&models.User{}, &models.Article{})
+
 }

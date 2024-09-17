@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/subosito/gotenv"
 )
 
 func main() {
@@ -19,11 +20,15 @@ func main() {
 		}
 	}()
 
+	gotenv.Load()
+
 	//set up routing/router
 	router := gin.Default()
 
 	v1 := router.Group("/api/v1/")
 	{
+		v1.GET("/auth/:provider", routes.RedirectHandler)
+		v1.GET("/auth/:provider/callback", routes.CallbackHandler)
 		articles := v1.Group("/article")
 		{
 			articles.GET("/", routes.GetHome)
