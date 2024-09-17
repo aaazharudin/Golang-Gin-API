@@ -2,9 +2,11 @@ package routes
 
 import (
 	"Learn-Gin/config"
-	"fmt"
+	"Learn-Gin/models"
 	"net/http"
 	"os"
+
+	"github.com/danilopolani/gocialite/structs"
 
 	"github.com/gin-gonic/gin"
 )
@@ -66,33 +68,32 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
-	// Print in terminal user information
-	fmt.Printf("%#v", token)
-	fmt.Printf("%#v", user)
-	fmt.Printf("%#v", provider)
+	var newUser = getOrRegisterUser(provider, user)
 
-	// If no errors, show provider name
-	c.Writer.Write([]byte("Hi, " + user.FullName))
+	c.JSON(200, gin.H{
+		"data":    newUser,
+		"token":   token,
+		"message": "berhasil login",
+	})
+
 }
 
-/* // Redirect to correct oAuth URL
-func RedirectHandler(c *gin.Context) {
-	authURL, err := gocial.New().
-		Driver("github").                // Set provider
-		Scopes([]string{"public_repo"}). // Set optional scope(s)
-		Redirect(                        //
-			os.Getenv("CLIENT_ID_GH"),                         // Client ID
-			os.Getenv("CLIENT_SECRET_GH"),                     // Client Secret
-			os.Getenv("AUTH_REDIRECT_URL")+"/github/callback", // Redirect URL
-		)
+func getOrRegisterUser(provider string, user *structs.User) models.User {
+	var userData models.User
 
-	// Check for errors (usually driver not valid)
-	if err != nil {
-		c.Writer.Write([]byte("Error: " + err.Error()))
-		return
+	config.DB.Where("provider = ? AND social_id = ?", provider, user.ID).First(&userData)
+	if userData.ID == 0 {
+		newUser := models.User{
+			Fullname: user.FullName,
+			Email:    user.Email,
+			SocialID: user.ID,
+			Provider: provider,
+			Avatar:   user.Avatar,
+		}
+		config.DB.Create(&newUser)
+		return newUser
+	} else {
+		return userData
 	}
 
-	// Redirect with authURL
-	c.Redirect(http.StatusFound, authURL) // Redirect with 302 HTTP code
 }
-*/
