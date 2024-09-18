@@ -3,13 +3,25 @@ package routes
 import (
 	"Learn-Gin/config"
 	"Learn-Gin/models"
+	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/danilopolani/gocialite/structs"
+	"github.com/golang-jwt/jwt"
 
 	"github.com/gin-gonic/gin"
 )
+
+var JWT_SECRET = "SUMPAH_SECRET"
+
+// temporary check jwt
+func CheckToken(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"massage": "succes",
+	})
+}
 
 // Redirect to correct oAuth URL
 func RedirectHandler(c *gin.Context) {
@@ -62,17 +74,18 @@ func CallbackHandler(c *gin.Context) {
 	provider := c.Param("provider")
 
 	// Handle callback and check for errors
-	user, token, err := config.Gocial.Handle(state, code)
+	user, _, err := config.Gocial.Handle(state, code)
 	if err != nil {
 		c.Writer.Write([]byte("Error: " + err.Error()))
 		return
 	}
 
 	var newUser = getOrRegisterUser(provider, user)
+	var jwtToken = createToken(&newUser)
 
 	c.JSON(200, gin.H{
 		"data":    newUser,
-		"token":   token,
+		"token":   jwtToken,
 		"message": "berhasil login",
 	})
 
@@ -95,5 +108,25 @@ func getOrRegisterUser(provider string, user *structs.User) models.User {
 	} else {
 		return userData
 	}
+
+}
+
+func createToken(user *models.User) string {
+	// Create a new token object, specifying signing method and the claims
+	// you would like it to contain.
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id":   user.ID,
+		"user_role": user.Role,
+		"exp":       time.Now().AddDate(0, 0, 7).Unix(),
+		"iat":       time.Now().Unix(),
+	})
+
+	// Sign and get the complete encoded token as a string using the secret
+	tokenString, err := jwtToken.SignedString([]byte(os.Getenv(JWT_SECRET)))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return tokenString
 
 }

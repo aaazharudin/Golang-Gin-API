@@ -2,6 +2,7 @@ package main
 
 import (
 	"Learn-Gin/config"
+	"Learn-Gin/middleware"
 	"Learn-Gin/routes"
 	"log"
 
@@ -29,6 +30,10 @@ func main() {
 	{
 		v1.GET("/auth/:provider", routes.RedirectHandler)
 		v1.GET("/auth/:provider/callback", routes.CallbackHandler)
+
+		//testing token user
+		v1.GET("/check", middleware.IsAuth(), routes.CheckToken)
+
 		articles := v1.Group("/article")
 		{
 			articles.GET("/", routes.GetHome)
