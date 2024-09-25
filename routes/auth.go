@@ -14,13 +14,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var JWT_SECRET = "SUMPAH_SECRET"
+var JWT_SECRET = os.Getenv("JWT_SECRET")
 
 // temporary check jwt
 func CheckToken(c *gin.Context) {
 	c.JSON(200, gin.H{
-		"massage": "succes",
-	})
+		"massage": "succes Login"})
 }
 
 // Redirect to correct oAuth URL

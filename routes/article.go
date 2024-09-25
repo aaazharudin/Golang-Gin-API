@@ -42,9 +42,11 @@ func GetArticle(c *gin.Context) {
 
 func PostArticle(c *gin.Context) {
 	item := models.Article{
-		Title: c.PostForm("title"),
-		Desc:  c.PostForm("desc"),
-		Slug:  slug.Make(c.PostForm("title")),
+		Model:  gorm.Model{},
+		Title:  c.PostForm("title"),
+		Slug:   slug.Make(c.PostForm("title")),
+		Desc:   c.PostForm("desc"),
+		UserID: uint(c.MustGet("Jwt_user_id").(float64)),
 	}
 
 	config.DB.Create(&item)

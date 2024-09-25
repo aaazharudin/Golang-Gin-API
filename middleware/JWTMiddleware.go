@@ -18,10 +18,10 @@ func IsAuth() gin.HandlerFunc {
 func CheckJWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.Request.Header.Get("Authorization")
-		bearerToken := strings.Split(authHeader, "")
+		bearerToken := strings.Split(authHeader, " ")
 
 		if len(bearerToken) == 2 {
-			token, _ := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
+			token, err := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
 				// Don't forget to validate the alg is what you expect:
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
@@ -32,15 +32,15 @@ func CheckJWT() gin.HandlerFunc {
 			})
 
 			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-				fmt.Println(claims["user_id"], claims["user_role"])
+				c.Set("Jwt_user_id", claims["user_id"])
+				c.Set("Jwt_isAdmin", claims["user_role"])
 			} else {
 				c.JSON(422, gin.H{
-					"massage": "invalid token"})
+					"massage": "invalid token", "Error": err})
 				c.Abort()
 				return
 			}
 		} else {
-
 			c.JSON(422, gin.H{
 				"massage": "Authorization Token not Provided"})
 			c.Abort()
