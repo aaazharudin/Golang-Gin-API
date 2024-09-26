@@ -32,6 +32,7 @@ func main() {
 		v1.GET("/auth/:provider/callback", routes.CallbackHandler)
 
 		//testing token user
+		v1.GET("/profile", middleware.IsAuth(), routes.GetProfile)
 		v1.GET("/check", middleware.IsAuth(), routes.CheckToken)
 
 		v1.GET("/article/:slug", routes.GetArticle)
@@ -40,6 +41,7 @@ func main() {
 			articles.GET("/", routes.GetHome)
 			articles.POST("/", middleware.IsAuth(), routes.PostArticle)
 			articles.GET("/tag/:tag", routes.GetArticleByTag)
+			articles.PUT("/update/:id", middleware.IsAuth(), routes.UpdateArticle)
 		}
 	}
 

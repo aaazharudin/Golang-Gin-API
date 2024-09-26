@@ -21,6 +21,18 @@ func GetHome(c *gin.Context) {
 	})
 }
 
+func GetProfile(c *gin.Context) {
+	var user models.User
+	user_id := int(c.MustGet("jwt_user_id").(float64))
+
+	item := config.DB.Where("id = ?", user_id).Preload("Articles", "user_id = ?", user_id).Find(&user)
+
+	c.JSON(200, gin.H{
+		"status": "Berhasil ke halaman profile",
+		"Data":   item,
+	})
+}
+
 func GetArticle(c *gin.Context) {
 	slug := c.Param("slug")
 
@@ -88,5 +100,44 @@ func GetArticleByTag(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"status": "Berhasil",
 		"Data":   item,
+	})
+}
+
+func UpdateArticle(c *gin.Context) {
+	id := c.Param("id")
+
+	var item models.Article
+
+	result := config.DB.First(&item, "id = ?", id)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			c.JSON(404, gin.H{"Status": "Article not found"})
+		} else {
+			c.JSON(500, gin.H{"error": result.Error.Error()})
+		}
+		return
+	}
+
+	// Update hanya jika id sama
+	config.DB.Model(&item).Where("id = ?", id).Updates(models.Article{
+		Title: c.PostForm("title"),
+		Desc:  c.PostForm("desc"),
+		Tag:   c.PostForm("tag"),
+	})
+
+	//pembatas agar user hanya bisa mengupdate artikelnya sendiri
+
+	/* 	if uint(c.MustGet("jwt_user_id").(float64)) != item.UserID {
+		c.JSON(403, gin.H{
+			"status":  "Error",
+			"Message": "this data is forbiden",
+		})
+		c.Abort()
+		return
+	} */
+
+	c.JSON(200, gin.H{
+		"Satus":   "Berhasil",
+		"Message": item,
 	})
 }
