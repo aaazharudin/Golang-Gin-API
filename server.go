@@ -34,11 +34,12 @@ func main() {
 		//testing token user
 		v1.GET("/check", middleware.IsAuth(), routes.CheckToken)
 
-		articles := v1.Group("/article")
+		v1.GET("/article/:slug", routes.GetArticle)
+		articles := v1.Group("/articles")
 		{
 			articles.GET("/", routes.GetHome)
-			articles.GET("/:slug", routes.GetArticle)
 			articles.POST("/", middleware.IsAuth(), routes.PostArticle)
+			articles.GET("/tag/:tag", routes.GetArticleByTag)
 		}
 	}
 
